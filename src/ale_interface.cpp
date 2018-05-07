@@ -295,12 +295,12 @@ DifficultyVect ALEInterface::getAvailableDifficulties() {
 // The difficulty must be an available mode.
 // This should be called only after the rom is loaded.
 void ALEInterface::setDifficulty(difficulty_t m) {
-  DifficultyVect available = romSettings->getAvailableDifficulties();
-  if(find(available.begin(), available.end(), m) != available.end()) {
+  //DifficultyVect available = romSettings->getAvailableDifficulties();
+  //if(find(available.begin(), available.end(), m) != available.end()) {
     environment->setDifficulty(m);
-  } else {
-    throw std::runtime_error("Invalid difficulty requested");
-  }
+    //} else {
+    //throw std::runtime_error("Invalid difficulty requested");
+    //}
 }
 
 // Returns the vector of legal actions. This should be called only

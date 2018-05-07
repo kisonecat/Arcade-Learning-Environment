@@ -184,8 +184,8 @@ reward_t StellaEnvironment::oneStepAct(Action player_a_action, Action player_b_a
   // Once in a terminal state, refuse to go any further (special actions must be handled
   //  outside of this environment; in particular reset() should be called rather than passing
   //  RESET or SYSTEM_RESET.
-  if (isTerminal())
-    return 0;
+  //if (isTerminal())
+  //return 0;
 
   // Convert illegal actions into NOOPs; actions such as reset are always legal
   noopIllegalActions(player_a_action, player_b_action);
