@@ -31,6 +31,46 @@
 
 using namespace std;
 
+inline static double sqr(double x) {
+    return x*x;
+}
+
+// From https://stackoverflow.com/questions/5083465/fast-efficient-least-squares-fit-algorithm-in-c
+int linreg(int n, const double x[], const double y[], double* m, double* b, double* r){
+    double   sumx = 0.0;                      /* sum of x     */
+    double   sumx2 = 0.0;                     /* sum of x**2  */
+    double   sumxy = 0.0;                     /* sum of x * y */
+    double   sumy = 0.0;                      /* sum of y     */
+    double   sumy2 = 0.0;                     /* sum of y**2  */
+
+    for (int i=0;i<n;i++){ 
+        sumx  += x[i];       
+        sumx2 += sqr(x[i]);  
+        sumxy += x[i] * y[i];
+        sumy  += y[i];      
+        sumy2 += sqr(y[i]); 
+    } 
+
+    double denom = (n * sumx2 - sqr(sumx));
+    if (denom == 0) {
+        // singular matrix. can't solve the problem.
+        *m = 0;
+        *b = 0;
+        if (r) *r = 0;
+            return 1;
+    }
+
+    *m = (n * sumxy  -  sumx * sumy) / denom;
+    *b = (sumy * sumx2  -  sumx * sumxy) / denom;
+    if (r!=NULL) {
+        *r = (sumxy - sumx * sumy / n) /    /* compute correlation coeff */
+              sqrt((sumx2 - sqr(sumx)/n) *
+              (sumy2 - sqr(sumy)/n));
+    }
+
+    return 0; 
+}
+
 int main(int argc, char** argv) {
     ALEInterface ale;
 
@@ -38,9 +78,9 @@ int main(int argc, char** argv) {
     ale.setInt("random_seed", 123);
 
     // We enable both screen and sound, which we will need for recording. 
-    ale.setBool("display_screen", true);
+    //ale.setBool("display_screen", true);
     // You may leave sound disabled (by setting this flag to false) if so desired. 
-    ale.setBool("sound", true);
+    //ale.setBool("sound", true);
 
     std::string recordPath = "record";
     std::cout << std::endl;
@@ -69,15 +109,43 @@ int main(int argc, char** argv) {
     screen.reserve(210*160);
 
     int bucketX = 0;
-
     int score = 0;
 
     int r = PADDLE_MIN;
     int movement;
+    
+    const int movementWindow = 15;
+    int previousMovements[movementWindow];
+    
+    //ale.setDifficulty(3);
 
+    int gameOverFrame = -1;
+    
+    double slope, intercept, correlation;
+    
+#define N 300
+    double xs[N];
+    double ys[N];
+    int points = 0;
+    int availablePoints = 0;
+    const int neededPoints = 135;
+    
     // Play a single episode, which we record. 
-    while (!ale.game_over()) {
+    for (;;) {
+      // Wait 1 second after end of game
+      if (gameOverFrame > 0) {
+        if (ale.getFrameNumber() > gameOverFrame + 60) {
+          break;
+        }
+      } else {
+        if (ale.game_over()) {
+          gameOverFrame = ale.getFrameNumber();
+          printf( "GAME OVER at %d\n", gameOverFrame);        
+        }
+      }
       
+      const ALERAM &ram = ale.getRAM();
+
       ale.getScreenGrayscale(screen);
 
       int lookAt = 187;
@@ -116,7 +184,6 @@ int main(int argc, char** argv) {
 
       int bucketWidth = 0;
 
-      /*
       lookAt = 148;
 
       int bucketTotals = 0;
@@ -135,7 +202,6 @@ int main(int argc, char** argv) {
       if (bucketWidth > 0) {
         bucketX = bucketTotals / bucketWidth;
       }
-      */
       
       Action a = (Action)0;
 
@@ -146,30 +212,50 @@ int main(int argc, char** argv) {
         continue;
       }
 
-      movement = 778396 - 4331 * (bombX + bucketWidth/2);      
+      if (ale.getFrameNumber() >= 10) {
+        xs[points] = bucketX;
+        ys[points] = previousMovements[2];
+        points++;
+        availablePoints++;      
+        if (points >= N)
+          points = 0;
+        if (availablePoints >= N)
+          availablePoints = N;
+        if (availablePoints >= neededPoints) {
+          linreg(availablePoints, xs, ys, &slope, &intercept, &correlation);
+        }
+      }
 
-      /*
-      printf( "### %d %d\n", r, bucketX );
-      
-      movement = r;
-      r = r + 23000;
-      if (r >= PADDLE_MAX)
-        break;
-      */
+      if (abs(correlation) > 0.9)
+        movement = intercept + slope * bombX;
+      else
+        movement = 750000 - 4000 * bombX;        
+
+      int i;
+      for(i=1; i<movementWindow; i++ )
+        previousMovements[i] = previousMovements[i-1];
+      previousMovements[0] = movement;
       
       a = (Action) ( movement ) ;
             
       //printf( "Bucket = %d (before %d) ; bomb = (%d,%d) then (%d,%d) then (%d,%d) then (%d,%d) so goal = %d; moving %d\n", bucketX, previousBucket, bombX, bombY,  nextBombX, nextBombY, thirdBombX, thirdBombY, fourthBombX, fourthBombY, goalX, (int)a );
 
       ale.act(a);                        
-      
-      const ALERAM &ram = ale.getRAM();
-      
+
       /*
+      printf("HEADER ");
+      for( int i=0; i<128; i++ ) {
+        printf("R%02d,", i );
+      }
+      printf("BOMB");
+      printf( "\n" );
+      
+      printf("RAM ");
       for( int i=0; i<128; i++ ) {
         byte_t b = ram.get(i);
-        printf("%02X ", b );
+        printf("%02d,", b );
       }
+      printf( "%d", bombX );      
       printf( "\n" );
       */
       
@@ -178,8 +264,6 @@ int main(int argc, char** argv) {
       score = atoi(scoreString);
       printf( "SCORE: %d on frame %d\n", score, ale.getFrameNumber() );
 
-      if (score == 3000) break;
-      
       /*
       int buckets = ram.get(33);
       if (buckets == 2) {
