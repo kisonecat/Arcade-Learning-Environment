@@ -50,7 +50,7 @@ int main(int argc, char** argv) {
     ale.setString("record_sound_filename", (recordPath + "/sound.wav").c_str());
     // We set fragsize to 64 to ensure proper sound sync 
     ale.setInt("fragsize", 64);
-    ale.setInt("frame_skip", 1);
+    ale.setInt("frame_skip", 1); 
     ale.setFloat("repeat_action_probability", -100);
 
     // Not completely portable, but will work in most cases
