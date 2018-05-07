@@ -183,93 +183,17 @@ void ALEState::applyActionPaddles(Event* event, int player_a_action, int player_
   int delta_left;
   int delta_right;
 
-    switch(player_a_action) {
-        case PLAYER_A_RIGHT: 
-        case PLAYER_A_RIGHTFIRE: 
-        case PLAYER_A_UPRIGHT: 
-        case PLAYER_A_DOWNRIGHT: 
-        case PLAYER_A_UPRIGHTFIRE: 
-        case PLAYER_A_DOWNRIGHTFIRE: 
-          delta_left = -PADDLE_DELTA;   
-            break; 
-            
-        case PLAYER_A_LEFT:
-        case PLAYER_A_LEFTFIRE: 
-        case PLAYER_A_UPLEFT: 
-        case PLAYER_A_DOWNLEFT: 
-        case PLAYER_A_UPLEFTFIRE: 
-        case PLAYER_A_DOWNLEFTFIRE: 
-      delta_left = PADDLE_DELTA;
-            break;
-    default:
-      delta_left = 0;
-      break;
-    }
-
-    switch(player_b_action) {
-        case PLAYER_B_RIGHT: 
-        case PLAYER_B_RIGHTFIRE: 
-        case PLAYER_B_UPRIGHT: 
-        case PLAYER_B_DOWNRIGHT: 
-        case PLAYER_B_UPRIGHTFIRE: 
-        case PLAYER_B_DOWNRIGHTFIRE: 
-          delta_right = -PADDLE_DELTA;
-            break; 
-            
-        case PLAYER_B_LEFT:
-        case PLAYER_B_LEFTFIRE: 
-        case PLAYER_B_UPLEFT: 
-        case PLAYER_B_DOWNLEFT: 
-        case PLAYER_B_UPLEFTFIRE: 
-        case PLAYER_B_DOWNLEFTFIRE: 
-      delta_right = PADDLE_DELTA;
-            break;
-    default:
-      delta_right = 0;
-      break;
-    }
-
+  delta_left = - player_a_action;
+  
   // Now update the paddle positions
-  updatePaddlePositions(event, delta_left, delta_right);
-
+  //updatePaddlePositions(event, delta_left, delta_right);
+  setPaddles(event, player_a_action, 0 );
   // Handle reset
   if (player_a_action == RESET || player_b_action == RESET) 
     event->set(Event::ConsoleReset, 1);
 
-  // Now add the fire event 
-  switch (player_a_action) {
-        case PLAYER_A_FIRE: 
-        case PLAYER_A_UPFIRE: 
-        case PLAYER_A_RIGHTFIRE: 
-        case PLAYER_A_LEFTFIRE: 
-        case PLAYER_A_DOWNFIRE: 
-        case PLAYER_A_UPRIGHTFIRE: 
-        case PLAYER_A_UPLEFTFIRE: 
-        case PLAYER_A_DOWNRIGHTFIRE: 
-        case PLAYER_A_DOWNLEFTFIRE: 
-            event->set(Event::PaddleZeroFire, 1);
-            break;
-    default:
-      // Nothing
-      break;
-  }
-  
-  switch (player_b_action) {
-        case PLAYER_B_FIRE: 
-        case PLAYER_B_UPFIRE: 
-        case PLAYER_B_RIGHTFIRE: 
-        case PLAYER_B_LEFTFIRE: 
-        case PLAYER_B_DOWNFIRE: 
-        case PLAYER_B_UPRIGHTFIRE: 
-        case PLAYER_B_UPLEFTFIRE: 
-        case PLAYER_B_DOWNRIGHTFIRE: 
-        case PLAYER_B_DOWNLEFTFIRE: 
-            event->set(Event::PaddleOneFire, 1);
-            break;
-    default:
-      // Nothing
-      break;
-  }
+  event->set(Event::PaddleZeroFire, 1);
+
 }
 
 void ALEState::pressSelect(Event* event) {
