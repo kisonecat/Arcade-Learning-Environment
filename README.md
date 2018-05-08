@@ -2,6 +2,16 @@
 
 <img align="right" src="doc/manual/figures/ale.gif" width=50>
 
+# Kaboom
+
+[![Video of perfect play of Kaboom](https://img.youtube.com/vi/39yIPmC0h9E/0.jpg)](https://www.youtube.com/watch?v=39yIPmC0h9E)
+
+I modified the ALE to handle paddles, so that running `ale.act` sets
+the resistance of the paddle instead of pushing buttons.  The
+resistance is initially just guessed, but after a couple seconds the
+code then relies on least squares to ascertain the relationship
+between the resistance and the screen position of the buckets.
+
 # The Arcade Learning Environment
 
 The Arcade Learning Environment (ALE) is a simple object-oriented framework that allows researchers and hobbyists to develop AI agents for Atari 2600 games. It is built on top of the Atari 2600 emulator [Stella](https://stella-emu.github.io/) and separates the details of emulation from agent design. This [video](https://www.youtube.com/watch?v=nzUiEkasXZI) depicts over 50 games currently supported in the ALE.
